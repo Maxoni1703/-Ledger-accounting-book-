@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: ledger_postgres
+    environment:
+      POSTGRES_DB: ledger
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    command: >
+      postgres -c listen_addresses='*' -c password_encryption=md5
+
+volumes:
+  postgres_data:
