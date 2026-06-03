@@ -16,6 +16,11 @@ use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\Textarea;
 use MoonShine\UI\Components\Layout\Box;
+use MoonShine\UI\Fields\Json;
+use MoonShine\UI\Fields\Select;
+use MoonShine\UI\Fields\Number;
+use App\Models\Account;
+use Illuminate\Database\Eloquent\Model;
 use Throwable;
 
 
@@ -33,6 +38,25 @@ class TransactionFormPage extends FormPage
             Box::make([
                 Date::make('Дата', 'date')->required(),
                 Textarea::make('Описание', 'description'),
+                Json::make('Проводки', 'entries_data')
+                    ->fields([
+                        Select::make('Счёт', 'account_id')
+                            ->options(Account::pluck('name', 'id')->toArray())
+                            ->required(),
+                        Number::make('Сумма', 'amount')
+                            ->min(0.01)
+                            ->step(0.01)
+                            ->required(),
+                        Select::make('Тип', 'type')
+                            ->options(['debit' => 'Дебет', 'credit' => 'Кредит'])
+                            ->required(),
+                    ])
+                    ->creatable(limit: null)
+                    ->removable()
+                    ->onApply(function (Model $item, $value) {
+                        $item->_entries_data = $value;
+                        return $item;
+                    }),
             ]),
         ];
     }
@@ -49,7 +73,32 @@ class TransactionFormPage extends FormPage
 
     protected function rules(DataWrapperContract $item): array
     {
-        return [];
+        return [
+            'entries_data' => [
+                'required',
+                'array',
+                'min:2',
+                function ($attribute, $value, $fail) {
+                    $debit = 0;
+                    $credit = 0;
+                    foreach((array)$value as $entry) {
+                        if (isset($entry['amount']) && isset($entry['type'])) {
+                            if ($entry['type'] === 'debit') {
+                                $debit += (float) $entry['amount'];
+                            } elseif ($entry['type'] === 'credit') {
+                                $credit += (float) $entry['amount'];
+                            }
+                        }
+                    }
+                    if (abs($debit - $credit) > 0.001) {
+                        $fail('Сумма дебета (' . $debit . ') не равна сумме кредита (' . $credit . ')');
+                    }
+                }
+            ],
+            'entries_data.*.account_id' => 'required',
+            'entries_data.*.amount' => 'required|numeric|min:0.01',
+            'entries_data.*.type' => 'required|in:debit,credit',
+        ];
     }
 
     /**

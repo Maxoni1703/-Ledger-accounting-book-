@@ -22,4 +22,15 @@ class Transaction extends Model
         // hasMany(JournalEntry::class) означает:
         // в таблице journal_entries есть поле transaction_id, которое ссылается на id транзакции
     }
+
+    public function getEntriesDataAttribute()
+    {
+        return $this->journalEntries->map(function($entry) {
+            return [
+                'account_id' => $entry->account_id,
+                'amount' => $entry->amount,
+                'type' => $entry->type,
+            ];
+        })->toArray();
+    }
 }
