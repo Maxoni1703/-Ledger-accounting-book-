@@ -96,4 +96,86 @@ class LedgerService
             'credit' => (float) $entries->where('type', 'credit')->sum('amount'),
         ];
     }
+
+    /**
+     * Формирует данные для оборотно-сальдовой ведомости (Trial Balance).
+     *
+     * @param string|null $dateFrom
+     * @param string|null $dateTo
+     * @return array
+     */
+    public function getTrialBalance(?string $dateFrom, ?string $dateTo): array
+    {
+        $accounts = \App\Models\Account::where('is_active', true)->orderBy('code')->get();
+        $report = [];
+
+        foreach ($accounts as $account) {
+            $queryBefore = \App\Models\JournalEntry::where('account_id', $account->id)
+                ->whereHas('transaction', function ($q) use ($dateFrom) {
+                    if ($dateFrom) {
+                        $q->whereDate('date', '<', $dateFrom);
+                    } else {
+                        // Если дата начала не задана, начальное сальдо нулевое
+                        $q->whereRaw('1 = 0');
+                    }
+                });
+
+            $openingDebit = (float) (clone $queryBefore)->where('type', 'debit')->sum('amount');
+            $openingCredit = (float) (clone $queryBefore)->where('type', 'credit')->sum('amount');
+            
+            $openingBalanceDebit = 0;
+            $openingBalanceCredit = 0;
+            
+            if (in_array($account->type, ['asset', 'expense'])) {
+                $openingBalanceDebit = max(0, $openingDebit - $openingCredit);
+                $openingBalanceCredit = max(0, $openingCredit - $openingDebit);
+            } else {
+                $openingBalanceCredit = max(0, $openingCredit - $openingDebit);
+                $openingBalanceDebit = max(0, $openingDebit - $openingCredit);
+            }
+
+            $queryPeriod = \App\Models\JournalEntry::where('account_id', $account->id)
+                ->whereHas('transaction', function ($q) use ($dateFrom, $dateTo) {
+                    if ($dateFrom) {
+                        $q->whereDate('date', '>=', $dateFrom);
+                    }
+                    if ($dateTo) {
+                        $q->whereDate('date', '<=', $dateTo);
+                    }
+                });
+
+            $turnoverDebit = (float) (clone $queryPeriod)->where('type', 'debit')->sum('amount');
+            $turnoverCredit = (float) (clone $queryPeriod)->where('type', 'credit')->sum('amount');
+
+            $closingDebit = $openingDebit + $turnoverDebit;
+            $closingCredit = $openingCredit + $turnoverCredit;
+
+            $closingBalanceDebit = 0;
+            $closingBalanceCredit = 0;
+
+            if (in_array($account->type, ['asset', 'expense'])) {
+                $closingBalanceDebit = max(0, $closingDebit - $closingCredit);
+                $closingBalanceCredit = max(0, $closingCredit - $closingDebit);
+            } else {
+                $closingBalanceCredit = max(0, $closingCredit - $closingDebit);
+                $closingBalanceDebit = max(0, $closingDebit - $closingCredit);
+            }
+
+            // Добавляем в отчёт только если есть остатки или обороты
+            if ($openingBalanceDebit > 0 || $openingBalanceCredit > 0 || $turnoverDebit > 0 || $turnoverCredit > 0 || $closingBalanceDebit > 0 || $closingBalanceCredit > 0) {
+                $report[] = [
+                    'account_code' => $account->code,
+                    'account_name' => $account->name,
+                    'opening_debit' => $openingBalanceDebit,
+                    'opening_credit' => $openingBalanceCredit,
+                    'turnover_debit' => $turnoverDebit,
+                    'turnover_credit' => $turnoverCredit,
+                    'closing_debit' => $closingBalanceDebit,
+                    'closing_credit' => $closingBalanceCredit,
+                ];
+            }
+        }
+
+        return $report;
+    }
 }

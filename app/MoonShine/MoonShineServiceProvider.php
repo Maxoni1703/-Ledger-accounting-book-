@@ -21,6 +21,7 @@ class MoonShineServiceProvider extends ServiceProvider
             ])
             ->pages([
                 ...$core->getConfig()->getPages(),
+                \App\MoonShine\Pages\TrialBalancePage::class,
             ]);
     }
 

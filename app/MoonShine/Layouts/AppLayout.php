@@ -16,6 +16,7 @@ class AppLayout extends BaseAppLayout
         return [
             MenuItem::make(AccountResource::class, 'Accounts'),
             MenuItem::make(TransactionResource::class, 'Transactions'),
+            MenuItem::make(\App\MoonShine\Pages\TrialBalancePage::class, 'Оборотно-сальдовая ведомость'),
         ];
     }
 }

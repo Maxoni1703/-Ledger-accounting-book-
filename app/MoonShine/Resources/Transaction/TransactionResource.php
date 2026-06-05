@@ -12,12 +12,18 @@ use App\Services\LedgerService;
 use MoonShine\Contracts\Core\PageContract;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Laravel\Resources\ModelResource;
+use MoonShine\ImportExport\Contracts\HasImportExportContract;
+use MoonShine\ImportExport\Traits\ImportExportConcern;
+use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Text;
+use MoonShine\UI\Fields\Date;
 
 /**
  * @extends ModelResource<Transaction, TransactionIndexPage, TransactionFormPage, TransactionDetailPage>
  */
-class TransactionResource extends ModelResource
+class TransactionResource extends ModelResource implements HasImportExportContract
 {
+    use ImportExportConcern;
     protected string $model = Transaction::class;
 
     protected string $title = 'Transactions';
@@ -31,6 +37,15 @@ class TransactionResource extends ModelResource
             TransactionIndexPage::class,
             TransactionFormPage::class,
             TransactionDetailPage::class,
+        ];
+    }
+
+    protected function exportFields(): iterable
+    {
+        return [
+            ID::make(),
+            Date::make('Дата', 'date'),
+            Text::make('Описание', 'description'),
         ];
     }
 

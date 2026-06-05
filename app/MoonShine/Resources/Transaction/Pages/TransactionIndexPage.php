@@ -55,14 +55,14 @@ class TransactionIndexPage extends IndexPage
         return [
             // Фильтр «Дата от» — ищет транзакции с этой даты включительно
             Date::make('Дата от', 'date')
-                ->withModify(function ($query, $value) {
+                ->onApply(function ($query, $value) {
                     // whereDate — сравниваем только дату, без времени
                     return $query->whereDate('date', '>=', $value);
                 }),
 
             // Фильтр «Дата до» — ищет транзакции до этой даты включительно
             Date::make('Дата до', 'date_to')
-                ->withModify(function ($query, $value) {
+                ->onApply(function ($query, $value) {
                     return $query->whereDate('date', '<=', $value);
                 }),
 
@@ -76,7 +76,7 @@ class TransactionIndexPage extends IndexPage
                         ->toArray()
                 )
                 ->nullable()         // Позволяет сбросить фильтр (выбрать «не выбрано»)
-                ->withModify(function ($query, $value) {
+                ->onApply(function ($query, $value) {
                     // whereHas — ищем транзакции у которых ЕСТЬ проводка с account_id = $value
                     return $query->whereHas('journalEntries', function ($q) use ($value) {
                         $q->where('account_id', $value);
