@@ -2,9 +2,12 @@
 .env
 .env.*
 !.env.example
+.env.backup
+.env.local
 /auth.json
 /Homestead.json
 /Homestead.yaml
+docker-compose.override.yml
 
 # Composer / PHP
 /vendor
@@ -20,8 +23,11 @@
 /.phpactor.json
 /.phpunit.cache
 /.phpunit.result.cache
+/.php-cs-fixer.cache
+/.pint.cache
 /_ide_helper.php
 /.phpstorm.meta.php
+/coverage
 
 # Node / front-end
 /node_modules
@@ -44,9 +50,14 @@ pnpm-debug.log*
 # IDE / OS
 /.codex
 /.cursor/
+/.fleet
 /.idea
 /.nova
 /.vscode
 /.zed
 .DS_Store
 Thumbs.db
+desktop.ini
+ehthumbs.db
+*.bak
+*.backup
