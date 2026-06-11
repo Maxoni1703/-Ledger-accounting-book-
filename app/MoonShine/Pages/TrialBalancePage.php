@@ -11,6 +11,7 @@ use MoonShine\UI\Components\FormBuilder;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\Text;
+use MoonShine\Support\Enums\FormMethod;
 use App\Services\LedgerService;
 
 class TrialBalancePage extends Page
@@ -26,14 +27,13 @@ class TrialBalancePage extends Page
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
 
-        // Получаем данные из сервиса
         $ledgerService = app(LedgerService::class);
         $reportData = $ledgerService->getTrialBalance($dateFrom, $dateTo);
 
         return [
             Box::make([
-                FormBuilder::make(route('moonshine.page', ['pageUri' => $this->uriKey()]))
-                    ->method('GET')
+                FormBuilder::make(route('moonshine.page', ['pageUri' => $this->getUriKey()]))
+                    ->method(FormMethod::GET)
                     ->fields([
                         Date::make('Период с', 'date_from')
                             ->default($dateFrom),

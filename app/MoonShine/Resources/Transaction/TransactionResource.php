@@ -51,25 +51,26 @@ class TransactionResource extends ModelResource implements HasImportExportContra
 
     protected function afterCreated(DataWrapperContract $item): DataWrapperContract
     {
-        $model = $item->original();
-
-        if (isset($model->_entries_data)) {
-            // Делегируем сохранение проводок в LedgerService
-            app(LedgerService::class)->saveEntries($model, $model->_entries_data);
-        }
+        $this->saveEntries($item);
 
         return $item;
     }
 
     protected function afterUpdated(DataWrapperContract $item): DataWrapperContract
     {
-        $model = $item->original();
-
-        if (isset($model->_entries_data)) {
-            // Делегируем сохранение проводок в LedgerService
-            app(LedgerService::class)->saveEntries($model, $model->_entries_data);
-        }
+        $this->saveEntries($item);
 
         return $item;
+    }
+
+    private function saveEntries(DataWrapperContract $item): void
+    {
+        $model = $item->getOriginal();
+
+        if (! $model instanceof Transaction || empty($model->_entries_data)) {
+            return;
+        }
+
+        app(LedgerService::class)->saveEntries($model, (array) $model->_entries_data);
     }
 }

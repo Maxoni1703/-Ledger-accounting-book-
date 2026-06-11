@@ -21,7 +21,6 @@ class AuthController extends Controller
             ]);
         }
 
-        // один токен на устройство, старый сносим
         $user->tokens()->delete();
         $token = $user->createToken('api')->plainTextToken;
 

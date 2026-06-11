@@ -12,7 +12,6 @@ use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use App\MoonShine\Resources\Transaction\TransactionResource;
 use MoonShine\Support\ListOf;
-use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\Textarea;
 use MoonShine\UI\Components\Layout\Box;
@@ -20,7 +19,9 @@ use MoonShine\UI\Fields\Json;
 use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Number;
 use App\Models\Account;
+use App\Services\LedgerService;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 
@@ -79,19 +80,10 @@ class TransactionFormPage extends FormPage
                 'array',
                 'min:2',
                 function ($attribute, $value, $fail) {
-                    $debit = 0;
-                    $credit = 0;
-                    foreach((array)$value as $entry) {
-                        if (isset($entry['amount']) && isset($entry['type'])) {
-                            if ($entry['type'] === 'debit') {
-                                $debit += (float) $entry['amount'];
-                            } elseif ($entry['type'] === 'credit') {
-                                $credit += (float) $entry['amount'];
-                            }
-                        }
-                    }
-                    if (abs($debit - $credit) > 0.001) {
-                        $fail('Сумма дебета (' . $debit . ') не равна сумме кредита (' . $credit . ')');
+                    try {
+                        app(LedgerService::class)->validateBalance((array) $value);
+                    } catch (ValidationException $exception) {
+                        $fail($exception->errors()['entries_data'][0] ?? 'Баланс проводок не сходится.');
                     }
                 }
             ],

@@ -38,7 +38,6 @@ class LedgerService
             }
         }
 
-        // Допускаем погрешность в 0.001 из-за особенностей float-арифметики
         if (abs($debit - $credit) > 0.001) {
             throw ValidationException::withMessages([
                 'entries_data' => sprintf(
@@ -60,13 +59,9 @@ class LedgerService
      */
     public function saveEntries(Transaction $transaction, array $entries): void
     {
-        // Валидируем баланс перед сохранением
         $this->validateBalance($entries);
 
-        // Удаляем старые проводки
         $transaction->journalEntries()->delete();
-
-        // Создаём новые проводки
         foreach ($entries as $entry) {
             if (empty($entry['account_id']) || empty($entry['amount']) || empty($entry['type'])) {
                 continue;
@@ -115,7 +110,6 @@ class LedgerService
                     if ($dateFrom) {
                         $q->whereDate('date', '<', $dateFrom);
                     } else {
-                        // Если дата начала не задана, начальное сальдо нулевое
                         $q->whereRaw('1 = 0');
                     }
                 });
@@ -161,7 +155,6 @@ class LedgerService
                 $closingBalanceDebit = max(0, $closingDebit - $closingCredit);
             }
 
-            // Добавляем в отчёт только если есть остатки или обороты
             if ($openingBalanceDebit > 0 || $openingBalanceCredit > 0 || $turnoverDebit > 0 || $turnoverCredit > 0 || $closingBalanceDebit > 0 || $closingBalanceCredit > 0) {
                 $report[] = [
                     'account_code' => $account->code,

@@ -7,20 +7,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Transaction extends Model
 {
-    // $fillable — разрешаем массовое заполнение
-    protected $fillable=[
+    protected $fillable = [
         'date',
         'description',
     ];
-    // Указываю, какие поля нужно преобразовывать в определённые типы данных
+
     protected $casts = [
-        'date' => 'date',  // Строка из БД → объект Carbon
+        'date' => 'date',
     ];
+
     public function journalEntries(): HasMany
     {
         return $this->hasMany(JournalEntry::class);
-        // hasMany(JournalEntry::class) означает:
-        // в таблице journal_entries есть поле transaction_id, которое ссылается на id транзакции
     }
 
     public function getEntriesDataAttribute()

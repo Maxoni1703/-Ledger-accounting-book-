@@ -38,7 +38,6 @@ class AccountController extends Controller
 
     public function destroy(Account $account): JsonResponse
     {
-        // если есть проводки — не удаляем
         if ($account->journalEntries()->exists()) {
             return response()->json([
                 'message' => 'Счёт используется в проводках',
