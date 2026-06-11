@@ -18,6 +18,8 @@ class LedgerService
 {
     /**
      * Проверяет, что сумма дебетовых проводок равна сумме кредитовых.
+     * Это основное правило двойной записи: одна операция должна закрываться
+     * одинаковыми суммами по дебету и кредиту.
      *
      * @param  array  $entries  Массив проводок: [['account_id'=>.., 'amount'=>.., 'type'=>..], ...]
      * @throws ValidationException если баланс не сходится
@@ -52,7 +54,8 @@ class LedgerService
 
     /**
      * Сохраняет проводки к транзакции.
-     * Сначала удаляет старые проводки, затем создаёт новые.
+     * Сначала удаляем старые записи, потому что операция может быть обновлена,
+     * и нам нужен только актуальный набор проводок.
      *
      * @param  Transaction  $transaction
      * @param  array        $entries
@@ -93,7 +96,9 @@ class LedgerService
     }
 
     /**
-     * Формирует данные для оборотно-сальдовой ведомости (Trial Balance).
+     * Формирует оборотно-сальдовую ведомость для выбранного периода.
+     * Здесь считаем открытый остаток до периода, обороты внутри периода и
+     * итоговый остаток на конец периода.
      *
      * @param string|null $dateFrom
      * @param string|null $dateTo
@@ -110,6 +115,7 @@ class LedgerService
                     if ($dateFrom) {
                         $q->whereDate('date', '<', $dateFrom);
                     } else {
+                        // Если период не задан, открытый остаток должен быть пустым.
                         $q->whereRaw('1 = 0');
                     }
                 });
@@ -124,6 +130,7 @@ class LedgerService
                 $openingBalanceDebit = max(0, $openingDebit - $openingCredit);
                 $openingBalanceCredit = max(0, $openingCredit - $openingDebit);
             } else {
+                // Для пассивов, капитала и доходов остаток чаще уходит в кредит.
                 $openingBalanceCredit = max(0, $openingCredit - $openingDebit);
                 $openingBalanceDebit = max(0, $openingDebit - $openingCredit);
             }

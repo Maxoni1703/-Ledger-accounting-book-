@@ -26,6 +26,10 @@ class TransactionController extends Controller
         return response()->json($transactions);
     }
 
+    /**
+     * Создаём транзакцию и её проводки в одной базе транзакции.
+     * Так мы не получим частично сохранённые данные, если что-то пойдёт не так.
+     */
     public function store(StoreTransactionRequest $request): JsonResponse
     {
         $data = $request->validated();
@@ -51,6 +55,10 @@ class TransactionController extends Controller
         return response()->json($transaction);
     }
 
+    /**
+     * Обновляем транзакцию и, если пришли новые проводки, перезаписываем их.
+     * Это удобно, потому что проводки всегда должны соответствовать текущей версии операции.
+     */
     public function update(UpdateTransactionRequest $request, Transaction $transaction): JsonResponse
     {
         $data = $request->validated();

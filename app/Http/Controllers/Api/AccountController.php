@@ -36,6 +36,10 @@ class AccountController extends Controller
         return response()->json($account);
     }
 
+    /**
+     * Удаляем счёт только если на него не ссылаются проводки.
+     * Иначе можно потерять целостность бухгалтерских данных.
+     */
     public function destroy(Account $account): JsonResponse
     {
         if ($account->journalEntries()->exists()) {

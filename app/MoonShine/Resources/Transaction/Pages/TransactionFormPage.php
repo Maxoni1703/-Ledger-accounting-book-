@@ -31,6 +31,9 @@ use Throwable;
 class TransactionFormPage extends FormPage
 {
     /**
+     * Собираем форму для ввода транзакции и её проводок.
+     * JSON-поле хранит массив проводок, который потом передаётся в сервис.
+     *
      * @return list<ComponentContract|FieldContract>
      */
     protected function fields(): iterable
@@ -55,6 +58,8 @@ class TransactionFormPage extends FormPage
                     ->creatable(limit: null)
                     ->removable()
                     ->onApply(function (Model $item, $value) {
+                        // MoonShine передаёт сюда массив проводок из формы.
+                        // Сохраняем его во временном свойстве, чтобы потом записать в БД.
                         $item->_entries_data = $value;
                         return $item;
                     }),
@@ -72,6 +77,10 @@ class TransactionFormPage extends FormPage
         return parent::formButtons();
     }
 
+    /**
+     * Проверяем, что проводки есть и что сумма дебета равна сумме кредита.
+     * Это важно, потому что иначе транзакция не будет корректной по правилу двойной записи.
+     */
     protected function rules(DataWrapperContract $item): array
     {
         return [

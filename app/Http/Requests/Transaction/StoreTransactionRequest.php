@@ -12,6 +12,10 @@ class StoreTransactionRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Проверяем базовые поля транзакции и сами проводки.
+     * Минимум две проводки нужен, потому что операция должна быть сбалансированной.
+     */
     public function rules(): array
     {
         return [

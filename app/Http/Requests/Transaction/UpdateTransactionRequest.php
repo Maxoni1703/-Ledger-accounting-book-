@@ -12,6 +12,10 @@ class UpdateTransactionRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Условная валидация для обновления: если приходят проводки,
+     * проверяем их так же, как при создании.
+     */
     public function rules(): array
     {
         return [

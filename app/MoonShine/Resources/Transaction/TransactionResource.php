@@ -40,6 +40,10 @@ class TransactionResource extends ModelResource implements HasImportExportContra
         ];
     }
 
+    /**
+     * Определяем, какие поля показывать в экспорте.
+     * Здесь достаточно даты и описания, потому что проводки сохраняются отдельно.
+     */
     protected function exportFields(): iterable
     {
         return [
@@ -49,6 +53,11 @@ class TransactionResource extends ModelResource implements HasImportExportContra
         ];
     }
 
+    /**
+     * После создания транзакции сохраняем связанные проводки.
+     * MoonShine передаёт данные формы в временное поле, и именно здесь
+     * мы передаём их в LedgerService.
+     */
     protected function afterCreated(DataWrapperContract $item): DataWrapperContract
     {
         $this->saveEntries($item);
@@ -63,6 +72,10 @@ class TransactionResource extends ModelResource implements HasImportExportContra
         return $item;
     }
 
+    /**
+     * Берём данные из временного поля формы и сохраняем проводки через сервис.
+     * Если поля нет, ничего не делаем.
+     */
     private function saveEntries(DataWrapperContract $item): void
     {
         $model = $item->getOriginal();

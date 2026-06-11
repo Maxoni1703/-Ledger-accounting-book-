@@ -19,6 +19,9 @@ class TrialBalancePage extends Page
     protected string $title = 'Оборотно-сальдовая ведомость';
 
     /**
+     * Формируем страницу оборотно-сальдовой ведомости.
+     * Сначала читаем фильтр по датам, потом передаём их в сервис для расчёта.
+     *
      * @return list<ComponentContract>
      */
     protected function components(): iterable
